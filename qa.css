@@ -345,12 +345,24 @@ header[data-comment-id] > .qaw-pin:hover{
   margin-top:8px;
 }
 .qaw-att-item{
+  position:relative;
   display:block;
-  width:56px;height:56px;
+  width:64px;height:64px;
   border-radius:6px;overflow:hidden;
   border:1px solid var(--qaw-border);
 }
+.qaw-att-item a{display:block;width:100%;height:100%;}
 .qaw-att-item img{width:100%;height:100%;object-fit:cover;display:block;}
+.qaw-att-x{
+  position:absolute;top:2px;right:2px;
+  width:18px;height:18px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(26,26,24,.78);color:#fff;
+  border:none;border-radius:50%;
+  font-size:13px;line-height:1;cursor:pointer;
+  padding:0;
+}
+.qaw-att-x:hover{background:var(--qaw-accent);}
 
 /* Desligar via classe ou ?qa=off */
 body.qaw-off .qaw-pin,

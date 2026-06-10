@@ -150,6 +150,17 @@
       return r.json();
     });
   }
+  function sbPatch(id, payload){
+    if (!configured) return Promise.reject(new Error('Supabase não configurado'));
+    var url = SUPABASE_URL+'/rest/v1/'+TABLE+'?id=eq.'+encodeURIComponent(id);
+    return fetch(url, {
+      method: 'PATCH',
+      headers: sbHeaders(),
+      body: JSON.stringify(payload)
+    }).then(function(r){
+      if (!r.ok) throw new Error('HTTP '+r.status);
+    });
+  }
 
   // ====================================================
   // CONTADORES por element_id
@@ -335,9 +346,28 @@
         return '<div class="qaw-comment">'+
           '<div class="qaw-comment-meta"><strong>'+escapeHtml(c.author_name||'Anônimo')+'</strong><span>'+fmtDate(c.created_at)+'</span></div>'+
           '<div>'+escapeHtml(c.body||'').replace(/\n/g,'<br>')+'</div>'+
-          attachmentsHtml(c.attachments)+
+          attachmentsHtml(c.attachments, c)+
           '</div>';
       }).join('');
+      // Excluir uma imagem do próprio comentário (delegação na lista)
+      list.onclick = function(e){
+        var btn = e.target && e.target.closest && e.target.closest('[data-qaw-att-del]');
+        if (!btn) return;
+        e.preventDefault();
+        if (!window.confirm('Excluir esta imagem do comentário?')) return;
+        var cid = btn.getAttribute('data-cid');
+        var idx = parseInt(btn.getAttribute('data-idx'), 10);
+        var row = null;
+        rows.forEach(function(r){ if (String(r.id) === cid) row = r; });
+        if (!row) return;
+        var atts = parseAtts(row.attachments);
+        atts.splice(idx, 1);
+        sbPatch(cid, { attachments: atts }).then(function(){
+          loadCommentsList(commentId);
+        }).catch(function(){
+          alert('Não foi possível excluir a imagem. Tente novamente.');
+        });
+      };
     });
   }
 
@@ -427,14 +457,20 @@
     return Array.isArray(v) ? v : [];
   }
 
-  function attachmentsHtml(atts){
+  function attachmentsHtml(atts, c){
     var list = parseAtts(atts);
     if (!list.length) return '';
-    var items = list.map(function(a){
+    // O × de excluir só aparece nas imagens dos comentários do próprio
+    // visitante (mesmo nome salvo no navegador no momento do envio).
+    var mine = !!(c && c.id && (ls('qaw-name') || '') && c.author_name === ls('qaw-name'));
+    var items = list.map(function(a, i){
       var u = escapeHtml((a && a.url) || '');
       if (!u) return '';
-      return '<a class="qaw-att-item" href="'+u+'" target="_blank" rel="noopener">'+
-             '<img src="'+u+'" alt="'+escapeHtml((a && a.name) || 'imagem')+'" loading="lazy"></a>';
+      return '<span class="qaw-att-item">'+
+             '<a href="'+u+'" target="_blank" rel="noopener">'+
+             '<img src="'+u+'" alt="'+escapeHtml((a && a.name) || 'imagem')+'" loading="lazy"></a>'+
+             (mine ? '<button type="button" class="qaw-att-x" data-qaw-att-del data-cid="'+escapeHtml(String(c.id))+'" data-idx="'+i+'" aria-label="Excluir imagem" title="Excluir imagem">×</button>' : '')+
+             '</span>';
     }).join('');
     return '<div class="qaw-att">'+items+'</div>';
   }
