@@ -169,6 +169,52 @@
   }
 
   // ====================================================
+  // PRAZO DE COMENTÁRIOS (qa_config.comments_until)
+  // ====================================================
+  function sbGetDeadline(){
+    if (!configured) return Promise.resolve(null);
+    return fetch(SUPABASE_URL+'/rest/v1/qa_config?key=eq.comments_until&select=value', { headers: sbHeaders() })
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){ return (rows && rows[0] && rows[0].value) || null; })
+      .catch(function(){ return null; });
+  }
+  function sbSaveDeadline(dateStr){
+    if (!configured) return Promise.reject(new Error('not configured'));
+    var h = sbHeaders();
+    if (!dateStr){
+      return fetch(SUPABASE_URL+'/rest/v1/qa_config?key=eq.comments_until', { method:'DELETE', headers:h })
+        .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); });
+    }
+    h['Prefer'] = 'resolution=merge-duplicates';
+    return fetch(SUPABASE_URL+'/rest/v1/qa_config', {
+      method:'POST', headers:h,
+      body: JSON.stringify({ key:'comments_until', value: dateStr })
+    }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); });
+  }
+  function fmtDeadlineBR(iso){
+    var p = String(iso || '').split('-');
+    return p.length === 3 ? (p[2]+'/'+p[1]+'/'+p[0]) : (iso || '');
+  }
+  function refreshDeadlineUI(){
+    sbGetDeadline().then(function(d){
+      var inp = $('#deadline-input'); var hint = $('#deadline-hint');
+      if (!inp) return;
+      inp.value = d || '';
+      if (!hint) return;
+      if (!d){
+        hint.textContent = 'Sem prazo — comentários abertos por tempo indeterminado.';
+        hint.className = 'adm-deadline-hint';
+        return;
+      }
+      var closed = new Date(d+'T23:59:59').getTime() < Date.now();
+      hint.textContent = closed
+        ? 'Encerrado em '+fmtDeadlineBR(d)+' — o site não aceita mais comentários.'
+        : 'Aberto até '+fmtDeadlineBR(d)+' (inclusive). Depois disso a escrita fecha sozinha.';
+      hint.className = 'adm-deadline-hint'+(closed ? ' is-closed' : '');
+    });
+  }
+
+  // ====================================================
   // AUTH
   // ====================================================
   function authKey(){ return 'qaw-adm-auth-'+(projectSlug||'default'); }
@@ -265,6 +311,13 @@
       '    </div>'+
 
       '    <div class="adm-filter">'+
+      '      <h5>Prazo de comentários</h5>'+
+      '      <input type="date" id="deadline-input">'+
+      '      <button class="adm-btn" id="deadline-save" style="margin-top:8px;width:100%;justify-content:center;">Salvar prazo</button>'+
+      '      <div class="adm-deadline-hint" id="deadline-hint"></div>'+
+      '    </div>'+
+
+      '    <div class="adm-filter">'+
       '      <h5>Autor</h5>'+
       '      <select id="filter-author"><option value="">Todos</option></select>'+
       '    </div>'+
@@ -337,6 +390,15 @@
       e.preventDefault();
       card.click();
     });
+    // Prazo de comentários: salvar (upsert) ou remover (campo vazio)
+    $('#deadline-save').addEventListener('click', function(){
+      var v = $('#deadline-input').value;
+      sbSaveDeadline(v).then(function(){
+        toast(v ? 'Prazo salvo — comentários até '+fmtDeadlineBR(v)+'.' : 'Prazo removido — comentários abertos.');
+        refreshDeadlineUI();
+      }).catch(function(){ toast('Erro ao salvar o prazo.'); });
+    });
+    refreshDeadlineUI();
     // Chips: remover um filtro (×) ou limpar todos
     $('#chips').addEventListener('click', function(e){
       var b = e.target.closest('button[data-clear]');

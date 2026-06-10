@@ -114,6 +114,23 @@
       'Content-Type': 'application/json'
     };
   }
+  // Prazo de comentários (qa_config.comments_until, data inclusive).
+  // Vencido: escrita fecha (leitura continua); o banco também trava via RLS.
+  var DEADLINE = null;
+  var commentsClosed = false;
+  function sbGetDeadline(){
+    if (!configured) return Promise.resolve(null);
+    var url = SUPABASE_URL+'/rest/v1/qa_config?key=eq.comments_until&select=value';
+    return fetch(url, { headers: sbHeaders() })
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){ return (rows && rows[0] && rows[0].value) || null; })
+      .catch(function(){ return null; });
+  }
+  function fmtDay(iso){
+    var p = String(iso || '').split('-');
+    return p.length === 3 ? (p[2]+'/'+p[1]+'/'+p[0]) : (iso || '');
+  }
+
   // Descartados (wontfix) ficam de fora do site: nem na bolinha de
   // contagem, nem na lista do modal — espelha a triagem feita no admin.
   var NOT_DISCARDED = '&or=(status.is.null,status.neq.wontfix)';
@@ -262,6 +279,7 @@
       '  <div class="qaw-list-title" data-qaw-list-title>Comentários nesta dobra</div>'+
       '  <div class="qaw-comments" data-qaw-list><div class="qaw-comment-empty">Carregando comentários…</div></div>'+
       '  <div class="qaw-modal-divider"></div>'+
+      '  <div class="qaw-closed" data-qaw-closed hidden></div>'+
       '  <button type="button" class="qaw-write-btn" data-qaw-write hidden>+ Escrever novo comentário</button>'+
       '  <form class="qaw-form" data-qaw-form hidden>'+
       '    <div class="qaw-field">'+
@@ -338,10 +356,19 @@
       var n = (rows && rows.length) || 0;
       if (titleEl) titleEl.textContent = n ? 'Comentários nesta dobra ('+n+')' : 'Comentários nesta dobra';
       if (initFlow && form && writeBtn){
+        var closedEl = modalRoot.querySelector('[data-qaw-closed]');
+        if (commentsClosed){
+          // Prazo vencido: leitura continua, escrita fecha
+          writeBtn.hidden = true; form.hidden = true;
+          if (closedEl){
+            closedEl.hidden = false;
+            closedEl.innerHTML = '⏰ O período de comentários encerrou em <strong>'+fmtDay(DEADLINE)+'</strong>.'+(n ? ' Os comentários enviados continuam visíveis acima.' : '');
+          }
+        }
         // Dobra com comentários: lista primeiro, formulário sob demanda.
         // Dobra vazia: formulário direto (sem clique extra).
-        if (n){ writeBtn.hidden = false; form.hidden = true; }
-        else  { writeBtn.hidden = true;  form.hidden = false; }
+        else if (n){ writeBtn.hidden = false; form.hidden = true; }
+        else { writeBtn.hidden = true; form.hidden = false; }
       }
       if (!n){
         list.innerHTML = '<div class="qaw-comment-empty">Seja o primeiro a comentar nesta dobra.</div>';
@@ -467,7 +494,7 @@
     if (!list.length) return '';
     // O × de excluir só aparece nas imagens dos comentários do próprio
     // visitante (mesmo nome salvo no navegador no momento do envio).
-    var mine = !!(c && c.id && (ls('qaw-name') || '') && c.author_name === ls('qaw-name'));
+    var mine = !commentsClosed && !!(c && c.id && (ls('qaw-name') || '') && c.author_name === ls('qaw-name'));
     var items = list.map(function(a, i){
       var u = escapeHtml((a && a.url) || '');
       if (!u) return '';
@@ -481,6 +508,7 @@
   }
 
   function submitComment(commentId, form){
+    if (commentsClosed) return;
     var data = new FormData(form);
     var node = document.querySelector('[data-comment-id="'+commentId+'"]');
     var label = node ? (node.getAttribute('data-comment-label') || commentId) : commentId;
@@ -532,6 +560,19 @@
       '<span>'+(configured ? 'QA mode · clique no <strong>+</strong> nas dobras' : 'QA widget · Supabase não configurado')+'</span>';
     document.body.appendChild(banner);
   }
+  function updateBanner(){
+    var banner = document.querySelector('.qaw-banner');
+    if (!banner || !configured) return;
+    var dot = banner.querySelector('.qaw-banner-dot');
+    var txt = banner.querySelector('span:last-child');
+    if (!txt) return;
+    if (commentsClosed){
+      txt.innerHTML = '⏰ Comentários encerrados em '+fmtDay(DEADLINE);
+      if (dot) dot.classList.add('is-offline');
+    } else if (DEADLINE){
+      txt.innerHTML = 'QA mode · comentários até <strong>'+fmtDay(DEADLINE)+'</strong> · clique no <strong>+</strong>';
+    }
+  }
 
   // ====================================================
   // INIT
@@ -547,6 +588,14 @@
     injectPins();
     injectBanner();
     if (configured) refreshAllCounts();
+    sbGetDeadline().then(function(d){
+      DEADLINE = d;
+      if (d){
+        var end = new Date(d + 'T23:59:59');
+        commentsClosed = !isNaN(end.getTime()) && Date.now() > end.getTime();
+      }
+      updateBanner();
+    });
     // observa mutações (cobre conteúdo injetado por React/Vue/Next.js dynamicamente)
     var obs = new MutationObserver(function(){ injectPins(); });
     obs.observe(document.body, { childList:true, subtree:true });

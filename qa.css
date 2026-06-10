@@ -283,6 +283,17 @@ header[data-comment-id] > div:first-child{
 .qaw-write-btn:hover{background:#A8FF3E;border-color:#000;color:#000;}
 .qaw-write-btn[hidden]{display:none;}
 .qaw-form[hidden]{display:none;}
+/* Aviso de prazo encerrado (escrita fechada, leitura segue) */
+.qaw-closed{
+  margin-top:14px;
+  padding:14px 16px;
+  background:var(--qaw-g050);
+  border:1px solid var(--qaw-border);
+  border-radius:var(--qaw-r-md);
+  font-size:13px;color:var(--qaw-g700);
+  text-align:center;line-height:1.5;
+}
+.qaw-closed[hidden]{display:none;}
 
 /* ============================================
    UPLOAD DE IMAGENS
