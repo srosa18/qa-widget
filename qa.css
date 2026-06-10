@@ -94,14 +94,14 @@ header[data-comment-id] > .qaw-pin:hover{
   box-shadow:0 6px 18px rgba(0,0,0,.22);
 }
 .qaw-pin .qaw-count{
-  position:absolute;top:-6px;right:-6px;
+  position:absolute;top:-8px;right:-8px;
   min-width:18px;height:18px;padding:0 5px;
-  background:var(--qaw-accent);color:#fff;
+  background:#000;color:#A8FF3E;
   border-radius:var(--qaw-r-pill);
-  font-size:10px;font-weight:600;
+  font-size:10px;font-weight:700;
   display:flex;align-items:center;justify-content:center;
   line-height:1;
-  border:2px solid var(--qaw-bg);
+  border:2px solid #A8FF3E;
 }
 .qaw-pin .qaw-count[hidden]{display:none;}
 
@@ -253,6 +253,44 @@ header[data-comment-id] > .qaw-pin:hover{
   }
   .qaw-banner{font-size:10px;padding:8px 12px;bottom:12px;right:12px;}
 }
+
+/* ============================================
+   DESTAQUE DA DOBRA + FLUXO "LEIA ANTES DE ESCREVER"
+   ============================================ */
+/* Selo da dobra no topo do modal — mesma identidade do pin */
+.qaw-fold-chip{
+  display:inline-block;
+  margin-top:8px;
+  background:#A8FF3E;
+  color:#000;
+  border:2px solid #000;
+  border-radius:10px;
+  padding:8px 14px;
+  font-size:16px;font-weight:700;line-height:1.25;
+}
+/* Título da lista de comentários (com contador) */
+.qaw-list-title{
+  margin:18px 0 8px;
+  font-size:11px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--qaw-g600);
+}
+/* Botão que revela o formulário quando a dobra já tem comentários */
+.qaw-write-btn{
+  width:100%;
+  margin-top:14px;
+  padding:13px 16px;
+  background:var(--qaw-g050);
+  border:1.5px dashed var(--qaw-border-strong);
+  border-radius:var(--qaw-r-md);
+  font-family:var(--qaw-ff);
+  font-size:13px;font-weight:600;color:var(--qaw-g800);
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.qaw-write-btn:hover{background:#A8FF3E;border-color:#000;color:#000;}
+.qaw-write-btn[hidden]{display:none;}
+.qaw-form[hidden]{display:none;}
 
 /* ============================================
    UPLOAD DE IMAGENS

@@ -238,14 +238,16 @@
       '<div class="qaw-modal" role="dialog" aria-modal="true" aria-label="Comentar nesta dobra">'+
       '  <div class="qaw-modal-header">'+
       '    <div>'+
-      '      <div class="qaw-modal-sub">'+escapeHtml(label)+'</div>'+
-      '      <h3 class="qaw-modal-title">Deixe seu comentário sobre esta dobra</h3>'+
+      '      <div class="qaw-modal-sub">Você está comentando a dobra</div>'+
+      '      <div class="qaw-fold-chip">'+escapeHtml(label)+'</div>'+
       '    </div>'+
       '    <button class="qaw-modal-close" type="button" aria-label="Fechar">×</button>'+
       '  </div>'+
+      '  <div class="qaw-list-title" data-qaw-list-title>Comentários nesta dobra</div>'+
       '  <div class="qaw-comments" data-qaw-list><div class="qaw-comment-empty">Carregando comentários…</div></div>'+
       '  <div class="qaw-modal-divider"></div>'+
-      '  <form class="qaw-form" data-qaw-form>'+
+      '  <button type="button" class="qaw-write-btn" data-qaw-write hidden>+ Escrever novo comentário</button>'+
+      '  <form class="qaw-form" data-qaw-form hidden>'+
       '    <div class="qaw-field">'+
       '      <label>Nome</label>'+
       '      <input class="qaw-input" name="name" required maxlength="80" value="'+escapeHtml(savedName)+'" placeholder="Seu nome">'+
@@ -286,9 +288,18 @@
       e.preventDefault();
       submitComment(commentId, form);
     });
+    // Fluxo "leia antes de escrever": quem clica no botão revela o formulário
+    var writeBtn = modalRoot.querySelector('[data-qaw-write]');
+    writeBtn.addEventListener('click', function(){
+      writeBtn.hidden = true;
+      form.hidden = false;
+      var nameInput = form.querySelector('[name="name"]');
+      var target = (nameInput && nameInput.value) ? form.querySelector('[name="body"]') : nameInput;
+      if (target) target.focus();
+    });
 
     setupUploader();
-    loadCommentsList(commentId);
+    loadCommentsList(commentId, true);
   }
 
   function closeModal(){
@@ -297,14 +308,26 @@
     document.body.style.overflow = '';
   }
 
-  function loadCommentsList(commentId){
+  function loadCommentsList(commentId, initFlow){
     var list = modalRoot.querySelector('[data-qaw-list]');
+    var titleEl = modalRoot.querySelector('[data-qaw-list-title]');
+    var form = modalRoot.querySelector('[data-qaw-form]');
+    var writeBtn = modalRoot.querySelector('[data-qaw-write]');
     if (!configured){
       list.innerHTML = '<div class="qaw-comment-empty">— Widget não configurado. Veja README do qa-widget.</div>';
+      if (initFlow && form) form.hidden = false;
       return;
     }
     sbGet(commentId).then(function(rows){
-      if (!rows || !rows.length){
+      var n = (rows && rows.length) || 0;
+      if (titleEl) titleEl.textContent = n ? 'Comentários nesta dobra ('+n+')' : 'Comentários nesta dobra';
+      if (initFlow && form && writeBtn){
+        // Dobra com comentários: lista primeiro, formulário sob demanda.
+        // Dobra vazia: formulário direto (sem clique extra).
+        if (n){ writeBtn.hidden = false; form.hidden = true; }
+        else  { writeBtn.hidden = true;  form.hidden = false; }
+      }
+      if (!n){
         list.innerHTML = '<div class="qaw-comment-empty">Seja o primeiro a comentar nesta dobra.</div>';
         return;
       }
