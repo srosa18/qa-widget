@@ -48,7 +48,8 @@
   width:40px;height:40px;
   display:flex;align-items:center;justify-content:center;
   background:#A8FF3E;
-  border:none;
+  border:2px solid #000;
+  box-sizing:border-box;
   border-radius:var(--qaw-r-pill);
   font-size:18px;font-weight:600;color:#000;
   cursor:pointer;
@@ -72,9 +73,23 @@ footer[data-comment-id] > .qaw-pin{
   right:calc(var(--qaw-gutter) + 8px);
   top:24px;
 }
+/* Header/nav: pin centralizado na barra, na margem direita */
+header[data-comment-id] > .qaw-pin{
+  top:50%;
+  transform:translateY(-50%);
+  right:calc(var(--qaw-gutter) + 8px);
+}
+header[data-comment-id] > .qaw-pin:hover{
+  transform:translateY(-50%) scale(1.08);
+}
+/* Em telas sem o menu desktop, afasta do botão sanduíche */
+@media (max-width:1024px){
+  header[data-comment-id] > .qaw-pin{ right:60px; }
+}
 .qaw-pin:hover{
   background:#000;
   color:#A8FF3E;
+  border-color:#A8FF3E;
   transform:scale(1.08);
   box-shadow:0 6px 18px rgba(0,0,0,.22);
 }
