@@ -114,11 +114,15 @@
       'Content-Type': 'application/json'
     };
   }
+  // Descartados (wontfix) ficam de fora do site: nem na bolinha de
+  // contagem, nem na lista do modal — espelha a triagem feita no admin.
+  var NOT_DISCARDED = '&or=(status.is.null,status.neq.wontfix)';
   function sbGet(commentId){
     if (!configured) return Promise.resolve([]);
     var url = SUPABASE_URL+'/rest/v1/'+TABLE+
       '?page=eq.'+encodeURIComponent(pageKey())+
       '&element_id=eq.'+encodeURIComponent(commentId)+
+      NOT_DISCARDED+
       '&order=created_at.asc';
     return fetch(url, { headers: sbHeaders() })
       .then(function(r){ return r.ok ? r.json() : []; })
@@ -128,6 +132,7 @@
     if (!configured) return Promise.resolve([]);
     var url = SUPABASE_URL+'/rest/v1/'+TABLE+
       '?page=eq.'+encodeURIComponent(pageKey())+
+      NOT_DISCARDED+
       '&order=created_at.desc';
     return fetch(url, { headers: sbHeaders() })
       .then(function(r){ return r.ok ? r.json() : []; })
