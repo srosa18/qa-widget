@@ -247,6 +247,7 @@
       '      <h5>Visualização</h5>'+
       '      <div class="adm-view-tabs" id="view-tabs">'+
       '        <button data-view="author">Por autor <span class="pill" id="cnt-authors">0</span></button>'+
+      '        <button data-view="page">Por página <span class="pill" id="cnt-pages">0</span></button>'+
       '        <button data-view="fold">Por dobra <span class="pill" id="cnt-folds">0</span></button>'+
       '        <button data-view="list">Cronológico <span class="pill" id="cnt-total">0</span></button>'+
       '      </div>'+
@@ -337,7 +338,9 @@
   }
 
   function expandAll(open){
-    var keys = state.view === 'author' ? uniqueAuthors() : (state.view === 'fold' ? uniqueFolds() : []);
+    var keys = state.view === 'author' ? uniqueAuthors()
+      : (state.view === 'fold' ? uniqueFolds()
+      : (state.view === 'page' ? uniquePages() : []));
     state.expanded = {};
     if (open) keys.forEach(function(k){ state.expanded[k] = true; });
     render();
@@ -373,6 +376,14 @@
     state.comments.forEach(function(c){ seen[c.page+'·'+c.element_id] = true; });
     return Object.keys(seen);
   }
+  function uniquePages(){
+    var seen = {};
+    state.comments.forEach(function(c){ seen[c.page] = true; });
+    return Object.keys(seen);
+  }
+  function pageLabel(p){
+    return p === 'index' ? 'Home' : '/'+p;
+  }
 
   function groupByAuthor(list){
     var map = {};
@@ -394,6 +405,15 @@
     return Object.keys(map).map(function(k){ return { key:k, label: map[k].label, page: map[k].page, items: map[k].items }; })
       .sort(function(a,b){ return b.items.length - a.items.length; });
   }
+  function groupByPage(list){
+    var map = {};
+    list.forEach(function(c){
+      if (!map[c.page]) map[c.page] = { page: c.page, items: [] };
+      map[c.page].items.push(c);
+    });
+    return Object.keys(map).map(function(k){ return { key:k, page:k, items: map[k].items }; })
+      .sort(function(a,b){ return b.items.length - a.items.length; });
+  }
 
   // ====================================================
   // RENDER · main
@@ -408,6 +428,7 @@
     $('#cnt-total').textContent   = all.length;
     $('#cnt-authors').textContent = uniqueAuthors().length;
     $('#cnt-folds').textContent   = uniqueFolds().length;
+    $('#cnt-pages').textContent   = uniquePages().length;
 
     $$('#view-tabs button').forEach(function(b){
       b.classList.toggle('active', b.getAttribute('data-view') === state.view);
@@ -415,6 +436,7 @@
 
     var titles = {
       author: { t:'Por autor',    s:'Comentários agrupados pelo autor que escreveu.' },
+      page:   { t:'Por página',   s:'Comentários agrupados pela página do site.' },
       fold:   { t:'Por dobra',    s:'Comentários agrupados por dobra de conteúdo (seção/card/headline).' },
       list:   { t:'Cronológico',  s:'Lista corrida do mais recente ao mais antigo.' }
     };
@@ -432,6 +454,7 @@
     if (!filtered.length) { content.appendChild(emptyState()); return; }
 
     if (state.view === 'author')      renderGroupView(content, groupByAuthor(filtered), 'author');
+    else if (state.view === 'page')   renderGroupView(content, groupByPage(filtered), 'page');
     else if (state.view === 'fold')   renderGroupView(content, groupByFold(filtered), 'fold');
     else                              renderListView(content, filtered);
   }
@@ -504,6 +527,18 @@
             (counts.done      ? '<span class="count-badge is-done">'+counts.done+' resolvido(s)</span>' : '')+
             '<span class="chevron">▾</span>'+
           '</div>';
+      } else if (type === 'page'){
+        headHTML = ''+
+          '<div>'+
+          '  <h3>'+escapeHtml(pageLabel(g.page))+'</h3>'+
+          '  <div class="meta">'+g.items.length+' comentário(s) em '+countDistinctFolds(g.items)+' dobra(s) · '+countDistinctAuthors(g.items)+' autor(es)</div>'+
+          '</div>'+
+          '<div class="group-counts">'+
+            (counts.open      ? '<span class="count-badge is-open">'+counts.open+' aberto(s)</span>' : '')+
+            (counts.reviewing ? '<span class="count-badge">'+counts.reviewing+' em análise</span>' : '')+
+            (counts.done      ? '<span class="count-badge is-done">'+counts.done+' resolvido(s)</span>' : '')+
+            '<span class="chevron">▾</span>'+
+          '</div>';
       } else {
         headHTML = ''+
           '<div>'+
@@ -546,10 +581,10 @@
     var main = el('div', { 'class':'adm-comment-main' });
 
     var headHtml = '';
-    if (type === 'author' || type === 'list'){
+    if (type === 'author' || type === 'list' || type === 'page'){
       headHtml += '<span class="label">'+escapeHtml(c.element_label||c.element_id)+'</span>';
     }
-    if (type === 'fold' || type === 'list'){
+    if (type === 'fold' || type === 'list' || type === 'page'){
       if (headHtml) headHtml += '<span class="sep">·</span>';
       headHtml += '<span class="author"><strong>'+escapeHtml(c.author_name)+'</strong>'+(c.author_email?' &lt;'+escapeHtml(c.author_email)+'&gt;':'')+'</span>';
     }
