@@ -91,6 +91,15 @@
     if (typeof v === 'string'){ try { return JSON.parse(v) || []; } catch(e){ return []; } }
     return Array.isArray(v) ? v : [];
   }
+  // Baixa a imagem (cross-origin) via blob, forçando download com nome amigável.
+  function downloadImage(url, filename){
+    fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
+      var obj = URL.createObjectURL(blob);
+      var a = el('a', { href: obj, download: filename || 'imagem' });
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(obj); }, 4000);
+    }).catch(function(){ window.open(url, '_blank'); });
+  }
   function toast(msg){
     var t = $('.adm-toast') || document.body.appendChild(el('div', { 'class':'adm-toast' }));
     t.textContent = msg;
@@ -537,12 +546,19 @@
     var atts = parseAtts(c.attachments);
     if (atts.length){
       var attBox = el('div', { 'class':'adm-att' });
-      attBox.innerHTML = atts.map(function(a){
-        var u = escapeHtml((a && a.url) || '');
-        if (!u) return '';
-        return '<a class="adm-att-item" href="'+u+'" target="_blank" rel="noopener" title="'+escapeHtml((a && a.name) || 'imagem')+'">'+
-               '<img src="'+u+'" alt="'+escapeHtml((a && a.name) || 'imagem')+'" loading="lazy"></a>';
-      }).join('');
+      atts.forEach(function(a, i){
+        var u = (a && a.url) || '';
+        if (!u) return;
+        var fig = el('div', { 'class':'adm-att-item' });
+        fig.innerHTML = ''+
+          '<a href="'+escapeHtml(u)+'" target="_blank" rel="noopener" title="Abrir em tamanho grande">'+
+          '  <img src="'+escapeHtml(u)+'" alt="'+escapeHtml((a && a.name) || 'imagem')+'" loading="lazy"></a>'+
+          '<button type="button" class="adm-att-dl" title="Baixar imagem" aria-label="Baixar imagem">⬇</button>';
+        var ext = (((a && a.type) && a.type.split('/')[1]) || (u.split('.').pop() || 'png')).replace(/[^a-z0-9]/gi,'').slice(0,4) || 'png';
+        var fname = (c.page+'-'+c.element_id+'-'+(i+1)+'.'+ext).replace(/[^a-zA-Z0-9._-]/g,'_');
+        fig.querySelector('.adm-att-dl').addEventListener('click', function(){ downloadImage(u, fname); });
+        attBox.appendChild(fig);
+      });
       main.appendChild(attBox);
     }
 
