@@ -1,0 +1,243 @@
+/* ============================================
+   QA WIDGET · SR Studio
+   Comment pins por dobra de conteúdo · self-contained
+   Não depende de variáveis CSS do site hospedeiro.
+   ============================================ */
+
+:root{
+  --qaw-bg: #FAFAF8;
+  --qaw-white: #FFFFFF;
+  --qaw-g050: #F5F4F1;
+  --qaw-g100: #EEEDE9;
+  --qaw-g200: #DEDCD6;
+  --qaw-g400: #A8A59C;
+  --qaw-g600: #6B6862;
+  --qaw-g700: #4D4B47;
+  --qaw-g800: #2E2C2A;
+  --qaw-g900: #1A1A18;
+  --qaw-border: #E2E0DA;
+  --qaw-border-strong: #C7C4BC;
+  --qaw-accent: #C1594A;
+  --qaw-green: #4A9D6F;
+  --qaw-ff: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --qaw-r-md: 8px;
+  --qaw-r-lg: 16px;
+  --qaw-r-pill: 999px;
+
+  /* Gutter dinâmico — alinha pin com max-width interno do conteúdo (até 1360px) */
+  --qaw-gutter: max(40px, calc((100vw - 1360px) / 2 + 40px));
+}
+@media (max-width:1024px){
+  :root{ --qaw-gutter: 32px; }
+}
+@media (max-width:640px){
+  :root{ --qaw-gutter: 20px; }
+}
+
+/* Marca elementos commentáveis */
+[data-comment-id]{
+  position:relative;
+}
+
+/* Botão balão "+" */
+.qaw-pin{
+  position:absolute;
+  top:16px;
+  right:calc(var(--qaw-gutter) + 8px);
+  z-index:40;
+  width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--qaw-g900);
+  border:none;
+  border-radius:var(--qaw-r-pill);
+  font-size:18px;font-weight:400;color:#fff;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
+  transition:all .18s ease;
+  font-family:var(--qaw-ff);
+  line-height:1;
+  padding:0;
+}
+
+/* Pin dentro de elementos não-section usa canto direito do próprio elemento */
+[data-comment-id]:not(section) > .qaw-pin{
+  right:16px;
+}
+@media (max-width:640px){
+  [data-comment-id]:not(section) > .qaw-pin{ right:12px; top:12px; }
+}
+
+/* Footer também é viewport-wide igual section */
+footer[data-comment-id] > .qaw-pin{
+  right:calc(var(--qaw-gutter) + 8px);
+  top:24px;
+}
+.qaw-pin:hover{
+  background:var(--qaw-accent);
+  transform:scale(1.08);
+  box-shadow:0 6px 18px rgba(0,0,0,.22);
+}
+.qaw-pin .qaw-count{
+  position:absolute;top:-6px;right:-6px;
+  min-width:18px;height:18px;padding:0 5px;
+  background:var(--qaw-accent);color:#fff;
+  border-radius:var(--qaw-r-pill);
+  font-size:10px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+  line-height:1;
+  border:2px solid var(--qaw-bg);
+}
+.qaw-pin .qaw-count[hidden]{display:none;}
+
+/* Modal backdrop */
+.qaw-modal-backdrop{
+  position:fixed;inset:0;z-index:2147483640;
+  background:rgba(26,26,24,.5);
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:0;
+  animation:qaw-fade .2s ease;
+}
+@keyframes qaw-fade{from{opacity:0;}to{opacity:1;}}
+.qaw-modal-backdrop[hidden]{display:none;}
+
+.qaw-modal{
+  background:var(--qaw-white);
+  border-radius:24px 24px 0 0;
+  width:100%;max-width:560px;
+  max-height:90vh;overflow:auto;
+  padding:32px 24px 24px;
+  position:relative;
+  animation:qaw-slide .22s ease;
+  box-shadow:0 -10px 40px rgba(0,0,0,.15);
+  font-family:var(--qaw-ff);
+}
+@keyframes qaw-slide{from{transform:translateY(20px);}to{transform:translateY(0);}}
+
+@media (min-width:768px){
+  .qaw-modal-backdrop{align-items:center;padding:24px;}
+  .qaw-modal{border-radius:16px;padding:32px;}
+}
+
+.qaw-modal-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:16px;margin-bottom:8px;
+}
+.qaw-modal-title{
+  font-size:16px;font-weight:600;color:var(--qaw-g900);
+  margin:0;line-height:1.3;
+}
+.qaw-modal-sub{
+  font-size:11px;color:var(--qaw-g600);
+  letter-spacing:.06em;text-transform:uppercase;
+  margin:0 0 16px;
+}
+.qaw-modal-close{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--qaw-g100);color:var(--qaw-g700);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;line-height:1;flex-shrink:0;
+  cursor:pointer;border:none;
+}
+.qaw-modal-close:hover{background:var(--qaw-g200);}
+
+.qaw-modal-divider{height:1px;background:var(--qaw-border);margin:16px 0;}
+
+/* Lista de comentários */
+.qaw-comments{
+  display:flex;flex-direction:column;gap:12px;
+  margin-bottom:16px;
+  max-height:240px;overflow-y:auto;
+}
+.qaw-comment{
+  background:var(--qaw-g100);
+  border-radius:12px;padding:12px 16px;
+  font-size:13px;color:var(--qaw-g800);line-height:1.5;
+}
+.qaw-comment-meta{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:10px;color:var(--qaw-g600);
+  letter-spacing:.04em;text-transform:uppercase;
+  margin-bottom:6px;
+}
+.qaw-comment-meta strong{color:var(--qaw-g900);font-weight:600;}
+.qaw-comment-empty{
+  text-align:center;color:var(--qaw-g600);
+  font-size:12px;padding:16px 0;font-style:italic;
+}
+
+/* Form */
+.qaw-form{display:flex;flex-direction:column;gap:12px;}
+.qaw-field{display:flex;flex-direction:column;gap:6px;}
+.qaw-field label{
+  font-size:10px;font-weight:600;color:var(--qaw-g700);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.qaw-input,.qaw-textarea{
+  width:100%;border:1px solid var(--qaw-border-strong);
+  border-radius:8px;padding:12px 16px;
+  font-size:14px;color:var(--qaw-g900);font-family:var(--qaw-ff);
+  background:var(--qaw-white);box-sizing:border-box;
+}
+.qaw-textarea{min-height:96px;resize:vertical;line-height:1.5;}
+.qaw-input:focus,.qaw-textarea:focus{
+  outline:none;border-color:var(--qaw-g900);
+}
+
+.qaw-actions{
+  display:flex;gap:8px;justify-content:flex-end;
+  margin-top:8px;flex-wrap:wrap;
+}
+.qaw-btn{
+  height:44px;padding:0 20px;
+  border-radius:var(--qaw-r-pill);
+  font-size:12px;font-weight:500;letter-spacing:.06em;
+  cursor:pointer;border:none;font-family:var(--qaw-ff);
+  display:inline-flex;align-items:center;gap:6px;
+  transition:all .15s ease;
+}
+.qaw-btn-primary{background:var(--qaw-g900);color:#fff;}
+.qaw-btn-primary:hover{opacity:.88;}
+.qaw-btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.qaw-btn-secondary{background:var(--qaw-white);color:var(--qaw-g900);border:1px solid var(--qaw-border-strong);}
+.qaw-btn-secondary:hover{background:var(--qaw-g100);}
+
+/* Status messages */
+.qaw-status{
+  font-size:12px;padding:8px 12px;border-radius:8px;
+  margin-top:8px;line-height:1.4;
+}
+.qaw-status-ok{background:#EAF3EE;color:#2E6B4A;border:1px solid #BFD8C9;}
+.qaw-status-err{background:#FAEAE7;color:#8A3326;border:1px solid #E0B7AF;}
+.qaw-status-loading{background:var(--qaw-g100);color:var(--qaw-g700);}
+
+/* Banner discreto canto inferior */
+.qaw-banner{
+  position:fixed;bottom:16px;right:16px;z-index:2147483630;
+  background:var(--qaw-white);
+  border:1px solid var(--qaw-border-strong);
+  border-radius:var(--qaw-r-pill);
+  padding:10px 16px;
+  font-size:11px;color:var(--qaw-g800);
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 4px 16px rgba(0,0,0,.08);
+  font-family:var(--qaw-ff);
+}
+.qaw-banner .qaw-banner-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--qaw-green);
+}
+.qaw-banner .qaw-banner-dot.is-offline{background:var(--qaw-g400);}
+
+/* Mobile */
+@media (max-width:640px){
+  .qaw-pin{
+    width:36px;height:36px;font-size:16px;
+    top:12px;
+    right:calc(var(--qaw-gutter) + 4px);
+  }
+  .qaw-banner{font-size:10px;padding:8px 12px;bottom:12px;right:12px;}
+}
+
+/* Desligar via classe ou ?qa=off */
+body.qaw-off .qaw-pin,
+body.qaw-off .qaw-banner{display:none !important;}
