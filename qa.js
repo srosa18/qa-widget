@@ -198,6 +198,10 @@
   // MODAL
   // ====================================================
   var modalRoot = null;
+  var pending = [];                  // imagens selecionadas no modal aberto
+  var MAX_FILE = 5 * 1024 * 1024;    // 5MB
+  var ACCEPT_RE = /^image\/(png|jpe?g|webp|gif)$/i;
+
   function ensureModalRoot(){
     if (modalRoot) return modalRoot;
     modalRoot = el('div', { 'class': 'qaw-modal-backdrop', 'hidden': '' });
@@ -207,6 +211,19 @@
     });
     document.addEventListener('keydown', function(e){
       if (e.key === 'Escape') closeModal();
+    });
+    // Colar print (Ctrl+V) enquanto o modal está aberto
+    document.addEventListener('paste', function(e){
+      if (!modalRoot || modalRoot.hidden) return;
+      var items = (e.clipboardData && e.clipboardData.items) || [];
+      var imgs = [];
+      for (var i = 0; i < items.length; i++){
+        if (items[i].type && items[i].type.indexOf('image/') === 0){
+          var f = items[i].getAsFile();
+          if (f) imgs.push(f);
+        }
+      }
+      if (imgs.length){ e.preventDefault(); addFiles(imgs); }
     });
     return modalRoot;
   }
@@ -241,6 +258,14 @@
       '      <label>Comentário</label>'+
       '      <textarea class="qaw-textarea" name="body" required maxlength="2000" placeholder="O que você gostaria de mudar nesta dobra?"></textarea>'+
       '    </div>'+
+      '    <div class="qaw-field">'+
+      '      <label>Imagens (opcional)</label>'+
+      '      <div class="qaw-drop" data-qaw-drop tabindex="0">'+
+      '        <input type="file" data-qaw-file accept="image/png,image/jpeg,image/webp,image/gif" multiple style="display:none">'+
+      '        <span class="qaw-drop-hint">Arraste prints aqui, <button type="button" class="qaw-link" data-qaw-pick>escolha do computador</button> ou cole com <strong>Ctrl+V</strong></span>'+
+      '      </div>'+
+      '      <div class="qaw-thumbs" data-qaw-thumbs></div>'+
+      '    </div>'+
       '    <div class="qaw-actions">'+
       '      <button type="button" class="qaw-btn qaw-btn-secondary" data-qaw-cancel>Cancelar</button>'+
       '      <button type="submit" class="qaw-btn qaw-btn-primary" data-qaw-submit>Enviar comentário</button>'+
@@ -255,12 +280,14 @@
     modalRoot.querySelector('.qaw-modal-close').addEventListener('click', closeModal);
     modalRoot.querySelector('[data-qaw-cancel]').addEventListener('click', closeModal);
 
+    pending = [];
     var form = modalRoot.querySelector('[data-qaw-form]');
     form.addEventListener('submit', function(e){
       e.preventDefault();
       submitComment(commentId, form);
     });
 
+    setupUploader();
     loadCommentsList(commentId);
   }
 
@@ -285,9 +312,108 @@
         return '<div class="qaw-comment">'+
           '<div class="qaw-comment-meta"><strong>'+escapeHtml(c.author_name||'Anônimo')+'</strong><span>'+fmtDate(c.created_at)+'</span></div>'+
           '<div>'+escapeHtml(c.body||'').replace(/\n/g,'<br>')+'</div>'+
+          attachmentsHtml(c.attachments)+
           '</div>';
       }).join('');
     });
+  }
+
+  // ====================================================
+  // UPLOAD DE IMAGENS · bucket "qa-uploads" (público)
+  // ====================================================
+  function addFiles(files){
+    var arr = Array.prototype.slice.call(files || []);
+    arr.forEach(function(f){
+      if (!ACCEPT_RE.test(f.type || '')) return;        // só imagens
+      if (f.size > MAX_FILE){
+        alert('A imagem "'+(f.name||'')+'" passa de 5MB e foi ignorada.');
+        return;
+      }
+      pending.push(f);
+    });
+    renderThumbs();
+  }
+
+  function renderThumbs(){
+    var box = modalRoot && modalRoot.querySelector('[data-qaw-thumbs]');
+    if (!box) return;
+    box.innerHTML = '';
+    pending.forEach(function(f, idx){
+      var url = URL.createObjectURL(f);
+      var chip = el('div', { 'class':'qaw-thumb' });
+      chip.appendChild(el('img', { 'src': url, 'alt': f.name || '' }));
+      var x = el('button', { 'class':'qaw-thumb-x', 'type':'button', 'aria-label':'Remover', 'title':'Remover' }, '×');
+      x.addEventListener('click', function(){ pending.splice(idx, 1); renderThumbs(); });
+      chip.appendChild(x);
+      box.appendChild(chip);
+    });
+  }
+
+  function setupUploader(){
+    var drop = modalRoot.querySelector('[data-qaw-drop]');
+    var file = modalRoot.querySelector('[data-qaw-file]');
+    var pick = modalRoot.querySelector('[data-qaw-pick]');
+    if (!drop || !file) return;
+    if (pick) pick.addEventListener('click', function(){ file.click(); });
+    file.addEventListener('change', function(){ addFiles(file.files); file.value = ''; });
+    ['dragenter','dragover'].forEach(function(ev){
+      drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('is-over'); });
+    });
+    ['dragleave','drop'].forEach(function(ev){
+      drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('is-over'); });
+    });
+    drop.addEventListener('drop', function(e){
+      var dt = e.dataTransfer;
+      if (dt && dt.files && dt.files.length) addFiles(dt.files);
+    });
+  }
+
+  function uploadAll(){
+    if (!pending.length) return Promise.resolve([]);
+    return Promise.all(pending.map(sbUpload));
+  }
+
+  function sbUpload(file){
+    var ext  = (file.type && file.type.split('/')[1]) || 'png';
+    var base = (file.name || ('print.'+ext)).replace(/[^a-zA-Z0-9._-]/g, '_').slice(-60);
+    var rand = Math.random().toString(36).slice(2, 8);
+    var path = pageKey() + '/' + PROJECT_ID + '/' + Date.now() + '-' + rand + '-' + base;
+    var dest = SUPABASE_URL + '/storage/v1/object/qa-uploads/' + path;
+    return fetch(dest, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'Content-Type': file.type || 'application/octet-stream'
+      },
+      body: file
+    }).then(function(r){
+      if (!r.ok) throw new Error('upload HTTP ' + r.status);
+      return {
+        url:  SUPABASE_URL + '/storage/v1/object/public/qa-uploads/' + path,
+        name: file.name || base,
+        size: file.size || 0,
+        type: file.type || ''
+      };
+    });
+  }
+
+  function parseAtts(v){
+    if (!v) return [];
+    if (typeof v === 'string'){ try { return JSON.parse(v) || []; } catch(e){ return []; } }
+    return Array.isArray(v) ? v : [];
+  }
+
+  function attachmentsHtml(atts){
+    var list = parseAtts(atts);
+    if (!list.length) return '';
+    var items = list.map(function(a){
+      var u = escapeHtml((a && a.url) || '');
+      if (!u) return '';
+      return '<a class="qaw-att-item" href="'+u+'" target="_blank" rel="noopener">'+
+             '<img src="'+u+'" alt="'+escapeHtml((a && a.name) || 'imagem')+'" loading="lazy"></a>';
+    }).join('');
+    return '<div class="qaw-att">'+items+'</div>';
   }
 
   function submitComment(commentId, form){
@@ -306,15 +432,21 @@
 
     var statusEl = form.querySelector('[data-qaw-status]');
     var submitBtn = form.querySelector('[data-qaw-submit]');
-    statusEl.innerHTML = '<div class="qaw-status qaw-status-loading">Enviando…</div>';
     submitBtn.disabled = true;
+    statusEl.innerHTML = '<div class="qaw-status qaw-status-loading">'+(pending.length ? 'Enviando imagens…' : 'Enviando…')+'</div>';
 
     ls('qaw-name', payload.author_name);
     if (payload.author_email) ls('qaw-email', payload.author_email);
 
-    sbPost(payload).then(function(){
+    uploadAll().then(function(atts){
+      payload.attachments = atts;
+      if (pending.length) statusEl.innerHTML = '<div class="qaw-status qaw-status-loading">Enviando…</div>';
+      return sbPost(payload);
+    }).then(function(){
+      pending = [];
       statusEl.innerHTML = '<div class="qaw-status qaw-status-ok">Obrigado. Comentário registrado.</div>';
       form.querySelector('[name="body"]').value = '';
+      var thumbs = form.querySelector('[data-qaw-thumbs]'); if (thumbs) thumbs.innerHTML = '';
       loadCommentsList(commentId);
       refreshAllCounts();
       setTimeout(function(){ closeModal(); }, 1200);

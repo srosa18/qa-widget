@@ -238,6 +238,66 @@ footer[data-comment-id] > .qaw-pin{
   .qaw-banner{font-size:10px;padding:8px 12px;bottom:12px;right:12px;}
 }
 
+/* ============================================
+   UPLOAD DE IMAGENS
+   ============================================ */
+/* Área de arrastar/colar/escolher */
+.qaw-drop{
+  border:1.5px dashed var(--qaw-border-strong);
+  border-radius:var(--qaw-r-md);
+  background:var(--qaw-g050);
+  padding:14px 16px;
+  text-align:center;
+  font-size:12px;color:var(--qaw-g600);
+  transition:border-color .15s ease, background .15s ease;
+}
+.qaw-drop.is-over{
+  border-color:var(--qaw-g800);
+  background:var(--qaw-g100);
+}
+.qaw-drop-hint strong{color:var(--qaw-g800);font-weight:600;}
+.qaw-link{
+  background:none;border:none;padding:0;
+  color:var(--qaw-g900);font-weight:600;cursor:pointer;
+  text-decoration:underline;font-size:inherit;font-family:inherit;
+}
+/* Miniaturas das imagens selecionadas (antes de enviar) */
+.qaw-thumbs{
+  display:flex;flex-wrap:wrap;gap:8px;
+  margin-top:10px;
+}
+.qaw-thumb{
+  position:relative;
+  width:64px;height:64px;
+  border-radius:var(--qaw-r-md);
+  overflow:hidden;
+  border:1px solid var(--qaw-border);
+  background:var(--qaw-g100);
+}
+.qaw-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.qaw-thumb-x{
+  position:absolute;top:2px;right:2px;
+  width:18px;height:18px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(26,26,24,.78);color:#fff;
+  border:none;border-radius:50%;
+  font-size:13px;line-height:1;cursor:pointer;
+  padding:0;
+}
+.qaw-thumb-x:hover{background:var(--qaw-accent);}
+/* Imagens já anexadas, exibidas em cada comentário */
+.qaw-att{
+  display:flex;flex-wrap:wrap;gap:6px;
+  margin-top:8px;
+}
+.qaw-att-item{
+  display:block;
+  width:56px;height:56px;
+  border-radius:6px;overflow:hidden;
+  border:1px solid var(--qaw-border);
+}
+.qaw-att-item img{width:100%;height:100%;object-fit:cover;display:block;}
+
 /* Desligar via classe ou ?qa=off */
 body.qaw-off .qaw-pin,
 body.qaw-off .qaw-banner{display:none !important;}
