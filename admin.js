@@ -299,6 +299,8 @@
       '      </div>'+
       '    </div>'+
 
+      '    <div class="adm-chips" id="chips"></div>'+
+
       '    <div class="adm-stats" id="stats"></div>'+
       '    <div id="content"></div>'+
       '  </main>'+
@@ -334,6 +336,22 @@
       if (!card) return;
       e.preventDefault();
       card.click();
+    });
+    // Chips: remover um filtro (×) ou limpar todos
+    $('#chips').addEventListener('click', function(e){
+      var b = e.target.closest('button[data-clear]');
+      if (!b) return;
+      var k = b.getAttribute('data-clear');
+      if (k === '*'){ state.filters = { status:'all', author:'', page:'all', q:'' }; }
+      else if (k === 'status') state.filters.status = 'all';
+      else if (k === 'page')   state.filters.page = 'all';
+      else if (k === 'author') state.filters.author = '';
+      else if (k === 'q')      state.filters.q = '';
+      $('#filter-status').value = state.filters.status;
+      $('#filter-page').value   = state.filters.page;
+      $('#filter-author').value = state.filters.author;
+      $('#filter-q').value      = state.filters.q;
+      render();
     });
   }
 
@@ -462,6 +480,7 @@
     renderStats(all);
 
     var filtered = applyFilters(all);
+    renderChips(filtered.length);
     var content = $('#content');
     content.innerHTML = '';
 
@@ -471,6 +490,29 @@
     else if (state.view === 'page')   renderGroupView(content, groupByPage(filtered), 'page');
     else if (state.view === 'fold')   renderGroupView(content, groupByFold(filtered), 'fold');
     else                              renderListView(content, filtered);
+  }
+
+  // Linha de orientação: quantos resultados + todos os filtros ativos
+  // (cada um removível no ×). Um lugar só que diz o que está sendo visto.
+  function renderChips(count){
+    var f = state.filters;
+    var chips = [];
+    if (f.status !== 'all') chips.push({ k:'status', label:'Status: '+statusLabel(f.status) });
+    if (f.page !== 'all')   chips.push({ k:'page',   label:'Página: '+pageLabel(f.page) });
+    if (f.author)           chips.push({ k:'author', label:'Autor: '+f.author });
+    if (f.q)                chips.push({ k:'q',      label:'Busca: “'+f.q+'”' });
+    var box = $('#chips');
+    if (!box) return;
+    if (!chips.length){
+      box.innerHTML = '<span class="adm-chips-count">'+count+' comentário(s) · sem filtros</span>';
+      return;
+    }
+    box.innerHTML = ''+
+      '<span class="adm-chips-count">'+count+' comentário(s) com os filtros:</span>'+
+      chips.map(function(c){
+        return '<button type="button" class="adm-chip" data-clear="'+c.k+'" title="Remover este filtro">'+escapeHtml(c.label)+' <span>×</span></button>';
+      }).join('')+
+      '<button type="button" class="adm-chip adm-chip-clear" data-clear="*">Limpar filtros</button>';
   }
 
   function renderStats(list){
