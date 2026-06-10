@@ -256,7 +256,7 @@
       '    <div class="adm-filter">'+
       '      <h5>Status</h5>'+
       '      <select id="filter-status">'+
-      '        <option value="all">Todos</option>'+
+      '        <option value="all">Todos (sem descartados)</option>'+
       '        <option value="open">Abertos</option>'+
       '        <option value="reviewing">Em análise</option>'+
       '        <option value="done">Resolvidos</option>'+
@@ -338,11 +338,13 @@
   }
 
   function expandAll(open){
-    var keys = state.view === 'author' ? uniqueAuthors()
-      : (state.view === 'fold' ? uniqueFolds()
-      : (state.view === 'page' ? uniquePages() : []));
+    // Expande exatamente os grupos visíveis com o filtro atual
+    var filtered = applyFilters(state.comments);
+    var groups = state.view === 'author' ? groupByAuthor(filtered)
+      : (state.view === 'fold' ? groupByFold(filtered)
+      : (state.view === 'page' ? groupByPage(filtered) : []));
     state.expanded = {};
-    if (open) keys.forEach(function(k){ state.expanded[k] = true; });
+    if (open) groups.forEach(function(g){ state.expanded[g.key] = true; });
     render();
   }
 
@@ -352,6 +354,9 @@
   function applyFilters(list){
     var f = state.filters;
     return list.filter(function(c){
+      // "Total/Todos" não inclui descartados — eles só aparecem no
+      // próprio filtro Descartados (são arquivo, não pendência).
+      if (f.status === 'all' && c.status === 'wontfix') return false;
       if (f.status !== 'all' && c.status !== f.status) return false;
       if (f.author && c.author_email !== f.author && c.author_name !== f.author) return false;
       if (f.page !== 'all' && c.page !== f.page) return false;
@@ -363,9 +368,11 @@
     });
   }
 
+  // Contagens das pills ignoram descartados (arquivo, não pendência)
   function uniqueAuthors(){
     var seen = {};
     state.comments.forEach(function(c){
+      if (c.status === 'wontfix') return;
       var k = c.author_email || c.author_name;
       seen[k] = true;
     });
@@ -373,12 +380,18 @@
   }
   function uniqueFolds(){
     var seen = {};
-    state.comments.forEach(function(c){ seen[c.page+'·'+c.element_id] = true; });
+    state.comments.forEach(function(c){
+      if (c.status === 'wontfix') return;
+      seen[c.page+'·'+c.element_id] = true;
+    });
     return Object.keys(seen);
   }
   function uniquePages(){
     var seen = {};
-    state.comments.forEach(function(c){ seen[c.page] = true; });
+    state.comments.forEach(function(c){
+      if (c.status === 'wontfix') return;
+      seen[c.page] = true;
+    });
     return Object.keys(seen);
   }
   function pageLabel(p){
@@ -425,7 +438,8 @@
     populateFilters();
 
     var all = state.comments;
-    $('#cnt-total').textContent   = all.length;
+    var activeCount = all.filter(function(c){ return c.status !== 'wontfix'; }).length;
+    $('#cnt-total').textContent   = activeCount;
     $('#cnt-authors').textContent = uniqueAuthors().length;
     $('#cnt-folds').textContent   = uniqueFolds().length;
     $('#cnt-pages').textContent   = uniquePages().length;
@@ -463,12 +477,14 @@
     var byStatus = { open:0, reviewing:0, done:0, wontfix:0 };
     list.forEach(function(c){ if (byStatus[c.status] !== undefined) byStatus[c.status]++; });
     var cur = state.filters.status;
+    // Total não soma descartados — eles têm o ranking próprio
+    var totalActive = list.length - byStatus.wontfix;
     function statCard(status, extraClass, num, label){
       return '<div class="adm-stat '+extraClass+(cur === status ? ' is-active' : '')+'" data-status="'+status+'" role="button" tabindex="0" title="Filtrar por: '+label+'">'+
         '<div class="adm-stat-num">'+num+'</div><div class="adm-stat-label">'+label+'</div></div>';
     }
     $('#stats').innerHTML = ''+
-      statCard('all', '', list.length, 'Total')+
+      statCard('all', '', totalActive, 'Total')+
       statCard('open', 'is-open', byStatus.open, 'Abertos')+
       statCard('reviewing', '', byStatus.reviewing, 'Em análise')+
       statCard('done', 'is-done', byStatus.done, 'Resolvidos')+
