@@ -86,6 +86,11 @@
       return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
     });
   }
+  function parseAtts(v){
+    if (!v) return [];
+    if (typeof v === 'string'){ try { return JSON.parse(v) || []; } catch(e){ return []; } }
+    return Array.isArray(v) ? v : [];
+  }
   function toast(msg){
     var t = $('.adm-toast') || document.body.appendChild(el('div', { 'class':'adm-toast' }));
     t.textContent = msg;
@@ -529,6 +534,18 @@
     body.textContent = c.body;
     main.appendChild(body);
 
+    var atts = parseAtts(c.attachments);
+    if (atts.length){
+      var attBox = el('div', { 'class':'adm-att' });
+      attBox.innerHTML = atts.map(function(a){
+        var u = escapeHtml((a && a.url) || '');
+        if (!u) return '';
+        return '<a class="adm-att-item" href="'+u+'" target="_blank" rel="noopener" title="'+escapeHtml((a && a.name) || 'imagem')+'">'+
+               '<img src="'+u+'" alt="'+escapeHtml((a && a.name) || 'imagem')+'" loading="lazy"></a>';
+      }).join('');
+      main.appendChild(attBox);
+    }
+
     if (c.reply_admin){
       var reply = el('div', { 'class':'adm-comment-reply' });
       reply.innerHTML = '<strong>Resposta interna</strong>'+escapeHtml(c.reply_admin).replace(/\n/g,'<br>');
@@ -662,9 +679,10 @@
   function exportCSV(){
     var rows = applyFilters(state.comments);
     if (!rows.length) { toast('Nada para exportar.'); return; }
-    var head = ['data','autor','email','pagina','dobra_id','dobra_label','status','prioridade','comentario','resposta_interna'];
+    var head = ['data','autor','email','pagina','dobra_id','dobra_label','status','prioridade','comentario','imagens','resposta_interna'];
     var csv = head.join(';') + '\r\n';
     rows.forEach(function(c){
+      var imgs = parseAtts(c.attachments).map(function(a){ return (a && a.url) || ''; }).filter(Boolean).join(' | ');
       var line = [
         fmtDate(c.created_at),
         c.author_name,
@@ -675,6 +693,7 @@
         c.status,
         c.priority||'normal',
         (c.body||'').replace(/[\r\n]+/g,' / '),
+        imgs,
         (c.reply_admin||'').replace(/[\r\n]+/g,' / ')
       ].map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; });
       csv += line.join(';') + '\r\n';
