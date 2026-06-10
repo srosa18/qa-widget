@@ -319,6 +319,21 @@
     $('#logout').addEventListener('click', logout);
     $('#expand-all').addEventListener('click', function(){ expandAll(true); });
     $('#collapse-all').addEventListener('click', function(){ expandAll(false); });
+    // Cards do placar funcionam como filtro de status (sincronizado com o select)
+    $('#stats').addEventListener('click', function(e){
+      var card = e.target.closest('.adm-stat[data-status]');
+      if (!card) return;
+      state.filters.status = card.getAttribute('data-status');
+      var sel = $('#filter-status'); if (sel) sel.value = state.filters.status;
+      render();
+    });
+    $('#stats').addEventListener('keydown', function(e){
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var card = e.target.closest && e.target.closest('.adm-stat[data-status]');
+      if (!card) return;
+      e.preventDefault();
+      card.click();
+    });
   }
 
   function expandAll(open){
@@ -403,7 +418,9 @@
       fold:   { t:'Por dobra',    s:'Comentários agrupados por dobra de conteúdo (seção/card/headline).' },
       list:   { t:'Cronológico',  s:'Lista corrida do mais recente ao mais antigo.' }
     };
-    $('#view-title').textContent = titles[state.view].t;
+    // Trilha de navegação: visualização (menu esquerdo) / status (cards)
+    var statusNames = { all:'Total', open:'Abertos', reviewing:'Em análise', done:'Resolvidos', wontfix:'Descartados' };
+    $('#view-title').textContent = titles[state.view].t+' / '+(statusNames[state.filters.status] || 'Total');
     $('#view-sub').textContent   = titles[state.view].s;
 
     renderStats(all);
@@ -422,12 +439,17 @@
   function renderStats(list){
     var byStatus = { open:0, reviewing:0, done:0, wontfix:0 };
     list.forEach(function(c){ if (byStatus[c.status] !== undefined) byStatus[c.status]++; });
+    var cur = state.filters.status;
+    function statCard(status, extraClass, num, label){
+      return '<div class="adm-stat '+extraClass+(cur === status ? ' is-active' : '')+'" data-status="'+status+'" role="button" tabindex="0" title="Filtrar por: '+label+'">'+
+        '<div class="adm-stat-num">'+num+'</div><div class="adm-stat-label">'+label+'</div></div>';
+    }
     $('#stats').innerHTML = ''+
-      '<div class="adm-stat"><div class="adm-stat-num">'+list.length+'</div><div class="adm-stat-label">Total</div></div>'+
-      '<div class="adm-stat is-open"><div class="adm-stat-num">'+byStatus.open+'</div><div class="adm-stat-label">Abertos</div></div>'+
-      '<div class="adm-stat"><div class="adm-stat-num">'+byStatus.reviewing+'</div><div class="adm-stat-label">Em análise</div></div>'+
-      '<div class="adm-stat is-done"><div class="adm-stat-num">'+byStatus.done+'</div><div class="adm-stat-label">Resolvidos</div></div>'+
-      '<div class="adm-stat"><div class="adm-stat-num">'+byStatus.wontfix+'</div><div class="adm-stat-label">Descartados</div></div>';
+      statCard('all', '', list.length, 'Total')+
+      statCard('open', 'is-open', byStatus.open, 'Abertos')+
+      statCard('reviewing', '', byStatus.reviewing, 'Em análise')+
+      statCard('done', 'is-done', byStatus.done, 'Resolvidos')+
+      statCard('wontfix', '', byStatus.wontfix, 'Descartados');
   }
 
   function populateFilters(){
