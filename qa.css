@@ -113,8 +113,8 @@ header[data-comment-id] > div:first-child{
   background:var(--qaw-white);
   border-radius:24px 24px 0 0;
   width:100%;max-width:560px;
-  max-height:90vh;overflow:auto;
-  padding:32px 24px 24px;
+  max-height:calc(100vh - 16px);overflow:auto;
+  padding:24px 20px 20px;
   position:relative;
   animation:qaw-slide .22s ease;
   box-shadow:0 -10px 40px rgba(0,0,0,.15);
@@ -123,8 +123,8 @@ header[data-comment-id] > div:first-child{
 @keyframes qaw-slide{from{transform:translateY(20px);}to{transform:translateY(0);}}
 
 @media (min-width:768px){
-  .qaw-modal-backdrop{align-items:center;padding:24px;}
-  .qaw-modal{border-radius:16px;padding:32px;}
+  .qaw-modal-backdrop{align-items:center;padding:16px;}
+  .qaw-modal{border-radius:16px;padding:24px 28px;}
 }
 
 .qaw-modal-header{
@@ -138,8 +138,13 @@ header[data-comment-id] > div:first-child{
 .qaw-modal-sub{
   font-size:11px;color:var(--qaw-g600);
   letter-spacing:.06em;text-transform:uppercase;
-  margin:0 0 16px;
+  margin:0;
 }
+.qaw-deadline{
+  margin-top:8px;
+  font-size:12px;color:var(--qaw-g600);
+}
+.qaw-deadline strong{color:var(--qaw-g900);}
 .qaw-modal-close{
   width:32px;height:32px;border-radius:50%;
   background:var(--qaw-g100);color:var(--qaw-g700);
@@ -149,13 +154,13 @@ header[data-comment-id] > div:first-child{
 }
 .qaw-modal-close:hover{background:var(--qaw-g200);}
 
-.qaw-modal-divider{height:1px;background:var(--qaw-border);margin:16px 0;}
+.qaw-modal-divider{height:1px;background:var(--qaw-border);margin:12px 0;}
 
-/* Lista de comentários */
+/* Lista de comentários — rola sozinha; o modal em si não precisa rolar */
 .qaw-comments{
   display:flex;flex-direction:column;gap:12px;
-  margin-bottom:16px;
-  max-height:240px;overflow-y:auto;
+  margin-bottom:12px;
+  max-height:min(240px, 30vh);overflow-y:auto;
 }
 .qaw-comment{
   background:var(--qaw-g100);
@@ -171,33 +176,40 @@ header[data-comment-id] > div:first-child{
 .qaw-comment-meta strong{color:var(--qaw-g900);font-weight:600;}
 .qaw-comment-empty{
   text-align:center;color:var(--qaw-g600);
-  font-size:12px;padding:16px 0;font-style:italic;
+  font-size:12px;padding:10px 0;font-style:italic;
 }
 
 /* Form */
-.qaw-form{display:flex;flex-direction:column;gap:12px;}
-.qaw-field{display:flex;flex-direction:column;gap:6px;}
+.qaw-form{display:flex;flex-direction:column;gap:10px;}
+/* Em telas largas, Nome e Email lado a lado — economiza altura (13") */
+@media (min-width:560px){
+  .qaw-form{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;align-items:start;}
+  .qaw-form > *{grid-column:1 / -1;}
+  .qaw-form > .qaw-field:nth-child(1){grid-column:1;}
+  .qaw-form > .qaw-field:nth-child(2){grid-column:2;}
+}
+.qaw-field{display:flex;flex-direction:column;gap:4px;}
 .qaw-field label{
   font-size:10px;font-weight:600;color:var(--qaw-g700);
   letter-spacing:.08em;text-transform:uppercase;
 }
 .qaw-input,.qaw-textarea{
   width:100%;border:1px solid var(--qaw-border-strong);
-  border-radius:8px;padding:12px 16px;
+  border-radius:8px;padding:10px 14px;
   font-size:14px;color:var(--qaw-g900);font-family:var(--qaw-ff);
   background:var(--qaw-white);box-sizing:border-box;
 }
-.qaw-textarea{min-height:96px;resize:vertical;line-height:1.5;}
+.qaw-textarea{min-height:76px;resize:vertical;line-height:1.5;}
 .qaw-input:focus,.qaw-textarea:focus{
   outline:none;border-color:var(--qaw-g900);
 }
 
 .qaw-actions{
   display:flex;gap:8px;justify-content:flex-end;
-  margin-top:8px;flex-wrap:wrap;
+  margin-top:4px;flex-wrap:wrap;
 }
 .qaw-btn{
-  height:44px;padding:0 20px;
+  height:40px;padding:0 20px;
   border-radius:var(--qaw-r-pill);
   font-size:12px;font-weight:500;letter-spacing:.06em;
   cursor:pointer;border:none;font-family:var(--qaw-ff);
@@ -253,16 +265,16 @@ header[data-comment-id] > div:first-child{
 /* Selo da dobra no topo do modal — mesma identidade do pin */
 .qaw-fold-chip{
   display:inline-block;
-  margin-top:8px;
+  margin-top:6px;
   background:#A8FF3E;
   color:#000;
   border-radius:10px;
-  padding:8px 14px;
-  font-size:16px;font-weight:700;line-height:1.25;
+  padding:6px 12px;
+  font-size:15px;font-weight:700;line-height:1.25;
 }
 /* Título da lista de comentários (com contador) */
 .qaw-list-title{
-  margin:18px 0 8px;
+  margin:12px 0 6px;
   font-size:11px;font-weight:600;
   letter-spacing:.08em;text-transform:uppercase;
   color:var(--qaw-g600);
@@ -270,8 +282,8 @@ header[data-comment-id] > div:first-child{
 /* Botão que revela o formulário quando a dobra já tem comentários */
 .qaw-write-btn{
   width:100%;
-  margin-top:14px;
-  padding:13px 16px;
+  margin-top:10px;
+  padding:11px 16px;
   background:var(--qaw-g050);
   border:1.5px dashed var(--qaw-border-strong);
   border-radius:var(--qaw-r-md);
@@ -303,7 +315,7 @@ header[data-comment-id] > div:first-child{
   border:1.5px dashed var(--qaw-border-strong);
   border-radius:var(--qaw-r-md);
   background:var(--qaw-g050);
-  padding:14px 16px;
+  padding:10px 14px;
   text-align:center;
   font-size:12px;color:var(--qaw-g600);
   transition:border-color .15s ease, background .15s ease;

@@ -273,6 +273,9 @@
       '    <div>'+
       '      <div class="qaw-modal-sub">Você está comentando a dobra</div>'+
       '      <div class="qaw-fold-chip">'+escapeHtml(label)+'</div>'+
+      (DEADLINE && !commentsClosed
+        ? '<div class="qaw-deadline">Você tem até <strong>'+fmtDay(DEADLINE)+'</strong> para enviar seus comentários.</div>'
+        : '')+
       '    </div>'+
       '    <button class="qaw-modal-close" type="button" aria-label="Fechar">×</button>'+
       '  </div>'+
