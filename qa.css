@@ -24,14 +24,12 @@
   --qaw-r-lg: 16px;
   --qaw-r-pill: 999px;
 
-  /* Gutter dinâmico — alinha pin com max-width interno do conteúdo (até 1360px) */
-  --qaw-gutter: max(40px, calc((100vw - 1360px) / 2 + 40px));
-}
-@media (max-width:1024px){
-  :root{ --qaw-gutter: 32px; }
+  /* Trilho de alinhamento dos pins — todos encostados na borda direita
+     do browser, mesmo offset em todas as páginas e tamanhos de tela */
+  --qaw-rail: 16px;
 }
 @media (max-width:640px){
-  :root{ --qaw-gutter: 20px; }
+  :root{ --qaw-rail: 12px; }
 }
 
 /* Marca elementos commentáveis */
@@ -43,7 +41,7 @@
 .qaw-pin{
   position:absolute;
   top:16px;
-  right:calc(var(--qaw-gutter) + 8px);
+  right:var(--qaw-rail);
   z-index:40;
   width:40px;height:40px;
   display:flex;align-items:center;justify-content:center;
@@ -60,31 +58,26 @@
   padding:0;
 }
 
-/* Pin dentro de elementos não-section usa canto direito do próprio elemento */
-[data-comment-id]:not(section) > .qaw-pin{
-  right:16px;
-}
 @media (max-width:640px){
-  [data-comment-id]:not(section) > .qaw-pin{ right:12px; top:12px; }
+  [data-comment-id]:not(section) > .qaw-pin{ top:12px; }
 }
 
-/* Footer também é viewport-wide igual section */
+/* Footer mantém o trilho, só desce um pouco */
 footer[data-comment-id] > .qaw-pin{
-  right:calc(var(--qaw-gutter) + 8px);
   top:24px;
 }
-/* Header/nav: pin centralizado na barra, na margem direita */
+/* Header/nav: pin centralizado na altura da barra, no mesmo trilho */
 header[data-comment-id] > .qaw-pin{
   top:50%;
   transform:translateY(-50%);
-  right:calc(var(--qaw-gutter) + 8px);
 }
 header[data-comment-id] > .qaw-pin:hover{
   transform:translateY(-50%) scale(1.08);
 }
-/* Em telas sem o menu desktop, afasta do botão sanduíche */
-@media (max-width:1024px){
-  header[data-comment-id] > .qaw-pin{ right:60px; }
+/* Abre respiro no conteúdo do header marcado pra barra (CTA/menu) nunca
+   ficar embaixo do pin — este CSS só carrega em preview, produção intacta */
+header[data-comment-id] > div:first-child{
+  padding-right:72px;
 }
 .qaw-pin:hover{
   background:#000;
@@ -249,7 +242,7 @@ header[data-comment-id] > .qaw-pin:hover{
   .qaw-pin{
     width:36px;height:36px;font-size:16px;
     top:12px;
-    right:calc(var(--qaw-gutter) + 4px);
+    right:var(--qaw-rail);
   }
   .qaw-banner{font-size:10px;padding:8px 12px;bottom:12px;right:12px;}
 }
@@ -263,7 +256,6 @@ header[data-comment-id] > .qaw-pin:hover{
   margin-top:8px;
   background:#A8FF3E;
   color:#000;
-  border:2px solid #000;
   border-radius:10px;
   padding:8px 14px;
   font-size:16px;font-weight:700;line-height:1.25;
