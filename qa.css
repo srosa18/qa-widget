@@ -42,7 +42,9 @@
   position:absolute;
   top:16px;
   right:var(--qaw-rail);
-  z-index:40;
+  /* Alto o bastante pra ficar acima de headers/menus fixos do site
+     (ex.: header.nav z-index:100), e abaixo do modal (2147483640) */
+  z-index:2147483630;
   width:40px;height:40px;
   display:flex;align-items:center;justify-content:center;
   background:#A8FF3E;
