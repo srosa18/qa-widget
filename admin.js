@@ -22,6 +22,11 @@
       label: 'Mêntore',
       url:   'https://vayaegbuptbarxnacele.supabase.co',
       key:   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZheWFlZ2J1cHRiYXJ4bmFjZWxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2MzcwMzEsImV4cCI6MjA5NjIxMzAzMX0._ubiVrB-0XM48PYB51uRhbEvr76lLNIAmlxMuiC9NWw'
+    },
+    wpremium: {
+      label: 'WPremium',
+      url:   'https://itwaxivhuxtnatjuoebe.supabase.co',
+      key:   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0d2F4aXZodXh0bmF0anVvZWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzI5NzMsImV4cCI6MjA5NDk0ODk3M30.mbjL6lV5Y05TaBBo3_BuGhK6AdIa6Bm6WDRcc2BC9-Q'
     }
     // Adicione aqui novos clientes:
     // ,acme: { label:'Acme', url:'https://xxx.supabase.co', key:'eyJ...' }
