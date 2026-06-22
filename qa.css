@@ -282,17 +282,18 @@ header[data-comment-id] > div:first-child{
 /* Botão que revela o formulário quando a dobra já tem comentários */
 .qaw-write-btn{
   width:100%;
-  margin-top:10px;
-  padding:11px 16px;
-  background:var(--qaw-g050);
-  border:1.5px dashed var(--qaw-border-strong);
+  margin-top:12px;
+  padding:14px 16px;
+  background:#A8FF3E;
+  border:2px solid #000;
   border-radius:var(--qaw-r-md);
   font-family:var(--qaw-ff);
-  font-size:13px;font-weight:600;color:var(--qaw-g800);
+  font-size:15px;font-weight:700;color:#000;
   cursor:pointer;
   transition:all .15s ease;
+  box-shadow:0 4px 12px rgba(0,0,0,.12);
 }
-.qaw-write-btn:hover{background:#A8FF3E;border-color:#000;color:#000;}
+.qaw-write-btn:hover{background:#000;color:#A8FF3E;border-color:#A8FF3E;}
 .qaw-write-btn[hidden]{display:none;}
 .qaw-form[hidden]{display:none;}
 /* Aviso de prazo encerrado (escrita fechada, leitura segue) */
