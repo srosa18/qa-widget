@@ -26,10 +26,17 @@
     wpremium: {
       label: 'WPremium',
       url:   'https://itwaxivhuxtnatjuoebe.supabase.co',
-      key:   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0d2F4aXZodXh0bmF0anVvZWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzI5NzMsImV4cCI6MjA5NDk0ODk3M30.mbjL6lV5Y05TaBBo3_BuGhK6AdIa6Bm6WDRcc2BC9-Q'
+      key:   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0d2F4aXZodXh0bmF0anVvZWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzI5NzMsImV4cCI6MjA5NDk0ODk3M30.mbjL6lV5Y05TaBBo3_BuGhK6AdIa6Bm6WDRcc2BC9-Q',
+      multi: true
+    },
+    lumakeup: {
+      label: 'Lu Make Up',
+      url:   'https://itwaxivhuxtnatjuoebe.supabase.co',
+      key:   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0d2F4aXZodXh0bmF0anVvZWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzI5NzMsImV4cCI6MjA5NDk0ODk3M30.mbjL6lV5Y05TaBBo3_BuGhK6AdIa6Bm6WDRcc2BC9-Q',
+      multi: true
     }
-    // Adicione aqui novos clientes:
-    // ,acme: { label:'Acme', url:'https://xxx.supabase.co', key:'eyJ...' }
+    // Novos clientes no banco único: mesma url/key, slug novo e multi:true.
+    // Cliente com banco próprio (legado): sem multi (ex.: mentore acima).
   };
 
   var BRAND          = 'SR Studio';
@@ -50,6 +57,9 @@
   var SUPABASE_URL      = project ? project.url : null;
   var SUPABASE_ANON_KEY = project ? project.key : null;
   var configured        = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+  // Banco único multi-cliente: filtra tudo pela etiqueta do projeto
+  var MULTI             = !!(project && project.multi);
+  var PROJ_FILTER       = MULTI ? '&project=eq.'+encodeURIComponent(projectSlug) : '';
 
   // ====================================================
   // STATE
@@ -153,7 +163,7 @@
   }
   function sbFetchAll(){
     if (!configured) return Promise.resolve([]);
-    var url = SUPABASE_URL+'/rest/v1/'+TABLE+'?order=created_at.desc&limit=1000';
+    var url = SUPABASE_URL+'/rest/v1/'+TABLE+'?order=created_at.desc&limit=1000'+PROJ_FILTER;
     return fetch(url, { headers: sbHeaders() })
       .then(function(r){ return r.ok ? r.json() : []; })
       .catch(function(){ return []; });
@@ -178,7 +188,7 @@
   // ====================================================
   function sbGetDeadline(){
     if (!configured) return Promise.resolve(null);
-    return fetch(SUPABASE_URL+'/rest/v1/qa_config?key=eq.comments_until&select=value', { headers: sbHeaders() })
+    return fetch(SUPABASE_URL+'/rest/v1/qa_config?key=eq.comments_until&select=value'+PROJ_FILTER, { headers: sbHeaders() })
       .then(function(r){ return r.ok ? r.json() : []; })
       .then(function(rows){ return (rows && rows[0] && rows[0].value) || null; })
       .catch(function(){ return null; });
@@ -187,13 +197,15 @@
     if (!configured) return Promise.reject(new Error('not configured'));
     var h = sbHeaders();
     if (!dateStr){
-      return fetch(SUPABASE_URL+'/rest/v1/qa_config?key=eq.comments_until', { method:'DELETE', headers:h })
+      return fetch(SUPABASE_URL+'/rest/v1/qa_config?key=eq.comments_until'+PROJ_FILTER, { method:'DELETE', headers:h })
         .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); });
     }
     h['Prefer'] = 'resolution=merge-duplicates';
+    var row = { key:'comments_until', value: dateStr };
+    if (MULTI) row.project = projectSlug;
     return fetch(SUPABASE_URL+'/rest/v1/qa_config', {
       method:'POST', headers:h,
-      body: JSON.stringify({ key:'comments_until', value: dateStr })
+      body: JSON.stringify(row)
     }).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); });
   }
   function fmtDeadlineBR(iso){

@@ -43,6 +43,11 @@
   var PROJECT_ID        = (currentScript ? currentScript.getAttribute('data-project') : null) || 'default';
   var HIDE_ON           = (currentScript ? currentScript.getAttribute('data-hide-on') : null) || '';
   var TABLE             = 'comments';
+  // Banco único multi-cliente: data-multi="1" liga a filtragem por
+  // coluna "project" (bancos legados de cliente único não têm a coluna
+  // e seguem sem o filtro — retrocompatível).
+  var MULTI             = (currentScript ? currentScript.getAttribute('data-multi') : null) === '1';
+  var PROJ_FILTER       = MULTI ? '&project=eq.'+encodeURIComponent(PROJECT_ID) : '';
 
   var configured = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 
@@ -120,7 +125,7 @@
   var commentsClosed = false;
   function sbGetDeadline(){
     if (!configured) return Promise.resolve(null);
-    var url = SUPABASE_URL+'/rest/v1/qa_config?key=eq.comments_until&select=value';
+    var url = SUPABASE_URL+'/rest/v1/qa_config?key=eq.comments_until&select=value'+PROJ_FILTER;
     return fetch(url, { headers: sbHeaders() })
       .then(function(r){ return r.ok ? r.json() : []; })
       .then(function(rows){ return (rows && rows[0] && rows[0].value) || null; })
@@ -139,7 +144,7 @@
     var url = SUPABASE_URL+'/rest/v1/'+TABLE+
       '?page=eq.'+encodeURIComponent(pageKey())+
       '&element_id=eq.'+encodeURIComponent(commentId)+
-      NOT_DISCARDED+
+      NOT_DISCARDED+PROJ_FILTER+
       '&order=created_at.asc';
     return fetch(url, { headers: sbHeaders() })
       .then(function(r){ return r.ok ? r.json() : []; })
@@ -149,7 +154,7 @@
     if (!configured) return Promise.resolve([]);
     var url = SUPABASE_URL+'/rest/v1/'+TABLE+
       '?page=eq.'+encodeURIComponent(pageKey())+
-      NOT_DISCARDED+
+      NOT_DISCARDED+PROJ_FILTER+
       '&order=created_at.desc';
     return fetch(url, { headers: sbHeaders() })
       .then(function(r){ return r.ok ? r.json() : []; })
@@ -160,6 +165,7 @@
       console.warn('[qa-widget] Supabase não configurado · comentário não foi salvo:', payload);
       return Promise.reject(new Error('Supabase não configurado'));
     }
+    if (MULTI) payload.project = PROJECT_ID;
     var url = SUPABASE_URL+'/rest/v1/'+TABLE;
     var h = sbHeaders();
     h['Prefer'] = 'return=representation';
