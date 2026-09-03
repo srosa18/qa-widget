@@ -18,6 +18,12 @@
   // REGISTRY · seus clientes
   // ====================================================
   var PROJECTS = {
+    drop: {
+      label: 'DROP Water Academy',
+      url:   'https://itwaxivhuxtnatjuoebe.supabase.co',
+      key:   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0d2F4aXZodXh0bmF0anVvZWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzI5NzMsImV4cCI6MjA5NDk0ODk3M30.mbjL6lV5Y05TaBBo3_BuGhK6AdIa6Bm6WDRcc2BC9-Q',
+      multi: true
+    },
     mentore: {
       label: 'Mêntore',
       url:   'https://vayaegbuptbarxnacele.supabase.co',
