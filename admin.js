@@ -40,6 +40,12 @@
       url:   'https://itwaxivhuxtnatjuoebe.supabase.co',
       key:   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0d2F4aXZodXh0bmF0anVvZWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzI5NzMsImV4cCI6MjA5NDk0ODk3M30.mbjL6lV5Y05TaBBo3_BuGhK6AdIa6Bm6WDRcc2BC9-Q',
       multi: true
+    },
+    'msd-home': {
+      label: 'MSD.com · Homepage wireframe',
+      url:   'https://itwaxivhuxtnatjuoebe.supabase.co',
+      key:   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0d2F4aXZodXh0bmF0anVvZWJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzI5NzMsImV4cCI6MjA5NDk0ODk3M30.mbjL6lV5Y05TaBBo3_BuGhK6AdIa6Bm6WDRcc2BC9-Q',
+      multi: true
     }
     // Novos clientes no banco único: mesma url/key, slug novo e multi:true.
     // Cliente com banco próprio (legado): sem multi (ex.: mentore acima).
