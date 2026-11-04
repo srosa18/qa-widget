@@ -46,6 +46,12 @@
       url:   'https://kddvtnuhdlsxohhpvqjv.supabase.co',
       key:   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkZHZ0bnVoZGxzeG9oaHB2cWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MTA5OTQsImV4cCI6MjA5Nzk4Njk5NH0.mF-F6akejAvjwsGS9QPclzgoowFLpt_IQ99kZe0J2kY',
       multi: true
+    },
+    'dkc-cases': {
+      label: 'Dark Kitchen Creatives · Revisão dos novos cases',
+      url:   'https://kddvtnuhdlsxohhpvqjv.supabase.co',
+      key:   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkZHZ0bnVoZGxzeG9oaHB2cWp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MTA5OTQsImV4cCI6MjA5Nzk4Njk5NH0.mF-F6akejAvjwsGS9QPclzgoowFLpt_IQ99kZe0J2kY',
+      multi: true
     }
     // Novos clientes no banco único: mesma url/key, slug novo e multi:true.
     // Cliente com banco próprio (legado): sem multi (ex.: mentore acima).
